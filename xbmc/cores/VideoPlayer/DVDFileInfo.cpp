@@ -18,11 +18,8 @@
  *
  */
 
-#include <string>
-#include <cstdlib>
-#include <memory>
-#include "threads/SystemClock.h"
 #include "DVDFileInfo.h"
+#include "threads/SystemClock.h"
 #include "FileItem.h"
 #include "settings/AdvancedSettings.h"
 #include "pictures/Picture.h"
@@ -56,6 +53,8 @@
 #include "Util.h"
 #include "utils/LangCodeExpander.h"
 
+#include <cstdlib>
+#include <memory>
 
 bool CDVDFileInfo::GetFileDuration(const std::string &path, int& duration)
 {
@@ -103,6 +102,7 @@ bool CDVDFileInfo::ExtractThumb(const std::string &strPath,
   std::string redactPath = CURL::GetRedacted(strPath);
   unsigned int nTime = XbmcThreads::SystemClockMillis();
   CFileItem item(strPath, false);
+  item.SetMimeTypeForInternetFile();
   CDVDInputStream *pInputStream = CDVDFactoryInputStream::CreateInputStream(NULL, item);
   if (!pInputStream)
   {
@@ -351,6 +351,7 @@ bool CDVDFileInfo::GetFileStreamDetails(CFileItem *pItem)
     playablePath = XFILE::CStackDirectory::GetFirstStackedFile(playablePath);
 
   CFileItem item(playablePath, false);
+  item.SetMimeTypeForInternetFile();
   CDVDInputStream *pInputStream = CDVDFactoryInputStream::CreateInputStream(NULL, item);
   if (!pInputStream)
     return false;

@@ -18,9 +18,9 @@
  *
  */
 
-#include "system.h"
-#include "VideoPlayerRadioRDS.h"
 #include "VideoPlayer.h"
+#include "VideoPlayerRadioRDS.h"
+#include "system.h"
 
 #include "DVDInputStreams/DVDInputStream.h"
 #include "DVDInputStreams/DVDFactoryInputStream.h"
@@ -696,6 +696,8 @@ bool CVideoPlayer::OpenFile(const CFileItem& file, const CPlayerOptions &options
 
   m_PlayerOptions = options;
   m_item = file;
+  // Try to resolve the correct mime type
+  m_item.SetMimeTypeForInternetFile();
 
   m_ready.Reset();
 
@@ -4960,11 +4962,6 @@ void CVideoPlayer::SetRenderViewMode(int mode)
 float CVideoPlayer::GetRenderAspectRatio()
 {
   return m_renderManager.GetAspectRatio();
-}
-
-RESOLUTION CVideoPlayer::GetRenderResolution()
-{
-  return g_graphicsContext.GetVideoResolution();
 }
 
 void CVideoPlayer::TriggerUpdateResolution()
