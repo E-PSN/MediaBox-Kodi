@@ -1501,7 +1501,8 @@
       { "name": "userrating", "$ref": "Optional.Integer" },
       { "name": "ratings", "$ref": "Video.Ratings" },
       { "name": "dateadded", "$ref": "Optional.String" },
-      { "name": "runtime", "$ref": "Optional.Integer", "description": "Runtime in seconds" }
+      { "name": "runtime", "$ref": "Optional.Integer", "description": "Runtime in seconds" },
+      { "name": "status", "$ref": "Optional.String" }
     ],
     "returns": "string"
   },

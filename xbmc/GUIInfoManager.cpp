@@ -104,6 +104,10 @@
 static CLinuxResourceCounter m_resourceCounter;
 #endif
 
+#ifdef TARGET_POSIX
+#include "linux/XMemUtils.h"
+#endif
+
 #define SYSHEATUPDATEINTERVAL 60000
 
 using namespace XFILE;
@@ -2201,6 +2205,7 @@ const infomap mediacontainer[] = {{ "hasfiles",         CONTAINER_HASFILES },
                                   { "folderpath",       CONTAINER_FOLDERPATH },
                                   { "foldername",       CONTAINER_FOLDERNAME },
                                   { "pluginname",       CONTAINER_PLUGINNAME },
+                                  { "plugincategory",   CONTAINER_PLUGINCATEGORY },
                                   { "viewmode",         CONTAINER_VIEWMODE },
                                   { "viewcount",        CONTAINER_VIEWCOUNT },
                                   { "totaltime",        CONTAINER_TOTALTIME },
@@ -3731,6 +3736,7 @@ const infomap listitem_labels[]= {{ "thumb",            LISTITEM_THUMB },
                                   { "castandrole",      LISTITEM_CAST_AND_ROLE },
                                   { "writer",           LISTITEM_WRITER },
                                   { "tagline",          LISTITEM_TAGLINE },
+                                  { "status",           LISTITEM_STATUS },
                                   { "top250",           LISTITEM_TOP250 },
                                   { "trailer",          LISTITEM_TRAILER },
                                   { "sortletter",       LISTITEM_SORT_LETTER },
@@ -5714,7 +5720,7 @@ std::string CGUIInfoManager::GetLabel(int info, int contextWindow, std::string *
   case ADSP_MASTER_INFO:
   case ADSP_MASTER_OWN_ICON:
   case ADSP_MASTER_OVERRIDE_ICON:
-    ActiveAE::CActiveAEDSP::GetInstance().TranslateCharInfo(info, strLabel);
+    CServiceBroker::GetADSP().TranslateCharInfo(info, strLabel);
     break;
   case WEATHER_CONDITIONS:
     strLabel = g_weatherManager.GetInfo(WEATHER_LABEL_CURRENT_COND);
@@ -6134,6 +6140,7 @@ std::string CGUIInfoManager::GetLabel(int info, int contextWindow, std::string *
     break;
   case CONTAINER_SHOWPLOT:
   case CONTAINER_SHOWTITLE:
+  case CONTAINER_PLUGINCATEGORY:
     {
       CGUIWindow *window = GetWindowWithCondition(contextWindow, WINDOW_CONDITION_IS_MEDIA_WINDOW);
       if (window)
@@ -6142,6 +6149,8 @@ std::string CGUIInfoManager::GetLabel(int info, int contextWindow, std::string *
           return ((CGUIMediaWindow *)window)->CurrentDirectory().GetProperty("showplot").asString();
         else if (info == CONTAINER_SHOWTITLE)
           return ((CGUIMediaWindow *)window)->CurrentDirectory().GetProperty("showtitle").asString();
+        else if (info == CONTAINER_PLUGINCATEGORY)
+          return ((CGUIMediaWindow *)window)->CurrentDirectory().GetProperty("plugincategory").asString();
       }
     }
     break;
@@ -6727,7 +6736,7 @@ bool CGUIInfoManager::GetBool(int condition1, int contextWindow, const CGUIListI
   else if (condition >= PVR_CONDITIONS_START && condition <= PVR_CONDITIONS_END)
     bReturn = g_PVRManager.TranslateBoolInfo(condition);
   else if (condition >= ADSP_CONDITIONS_START && condition <= ADSP_CONDITIONS_END)
-    bReturn = ActiveAE::CActiveAEDSP::GetInstance().TranslateBoolInfo(condition);
+    bReturn = CServiceBroker::GetADSP().TranslateBoolInfo(condition);
   else if (condition == SYSTEM_INTERNET_STATE)
   {
     g_sysinfo.GetInfo(condition);
@@ -7444,8 +7453,6 @@ bool CGUIInfoManager::GetMultiInfoBool(const GUIInfo &info, int contextWindow, c
             strContent = "episodes";
           if (m_currentFile->HasVideoInfoTag() && m_currentFile->GetVideoInfoTag()->m_type == MediaTypeMusicVideo)
             strContent = "musicvideos";
-          if (m_currentFile->HasVideoInfoTag() && m_currentFile->GetVideoInfoTag()->m_strStatus == "livetv")
-            strContent = "livetv";
           if (m_currentFile->HasPVRChannelInfoTag())
             strContent = "livetv";
           bReturn = StringUtils::EqualsNoCase(m_stringParameters[info.GetData1()], strContent);
@@ -9785,6 +9792,10 @@ std::string CGUIInfoManager::GetItemLabel(const CFileItem *item, int info, std::
   case LISTITEM_TAGLINE:
     if (item->HasVideoInfoTag())
       return item->GetVideoInfoTag()->m_strTagLine;
+    break;
+  case LISTITEM_STATUS:
+    if (item->HasVideoInfoTag())
+      return item->GetVideoInfoTag()->m_strStatus;
     break;
   case LISTITEM_TRAILER:
     if (item->HasVideoInfoTag())
